@@ -6,20 +6,25 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 
+#define CISTERNA 1
+#define CAIXA 2
+
+const byte SYSTEM_APPLICATION_TYPE = CISTERNA;
+
 // Configuração do WIFI
 const char *WIFI_SSID = "BRENAN";
 const char *WIFI_PASSWORD = "25602874";
-
-AsyncWebServer webServer(80);
-
-const char *CAIXA_HOST_NAME = "CAIXA_ESP32";
-const char *CISTERNA_HOST_NAME = "CISTERNA_ESP32";
 
 const IPAddress SUBNET = IPAddress(255, 255, 255, 0);
 const IPAddress GATEWAY = IPAddress(192, 168, 0, 1);
 const IPAddress DNS(181, 213, 132, 2);
 const IPAddress DNS1(8, 8, 8, 8);
 const IPAddress DNS2(8, 8, 4, 4);
+
+AsyncWebServer webServer(80);
+
+const char *CAIXA_HOST_NAME = "CAIXA_ESP32";
+const char *CISTERNA_HOST_NAME = "CISTERNA_ESP32";
 
 const IPAddress CAIXA_STATIC_IP = IPAddress(192, 168, 1, 10);
 const IPAddress CISTERNA_STATIC_IP = IPAddress(192, 168, 1, 11);
@@ -37,10 +42,15 @@ const byte ECHO_PIN = 12;
 UltraSonicDistanceSensor distanceSensor(TRIGGER_PIN, ECHO_PIN);
 
 // Configuração da dos alertas de Vazio e Cheio
-const float MAX_DISTANCE_IN_CM = 30.f;
+const float SENSOR_HEIGHT = 30.f;
 const float FULL_LEVEL_PERCENTAGE = 85.f;
 const float EMPTY_LEVEL_PERCENTAGE = 50.f;
 
+// Mudar para esse tipo de entrada
+const float FULL_HEIGHT;
+const float EMPTY_HEIGHT;
+
+// Variáveis de Controle / Estados
 bool isFull = false;
 bool isEmpty = false;
 bool lock = false;
@@ -50,9 +60,11 @@ bool waterIn = false;
 // Nível da Água
 float waterLevelPercentage = 0.f;
 
-// Configuração dos pinos de Vazio e Cheio
+// Configuração dos pinos de Vazio e Cheio (Vai ser retirado ao final)
 const int FULL_PIN = 2;
 const int EMPTY_PIN = 4;
+
+const int WATER_OUT_PIN; // Pino que vai controlar o relé
 
 void setup()
 {
@@ -70,7 +82,7 @@ void loop()
 
     // Serial.print("Printando a distancia: ");
     float distanceCm = distanceSensor.measureDistanceCm();
-    float levelPercentage = (1 - (distanceCm / MAX_DISTANCE_IN_CM)) * 100;
+    float levelPercentage = (1 - (distanceCm / SENSOR_HEIGHT)) * 100;
     levelPercentage = limitLevelPercentage(levelPercentage);
     waterLevelPercentage = levelPercentage;
 
@@ -186,9 +198,18 @@ void configUTCTime()
 
 void connectToWifiWithStaticIP()
 {
-    Serial.println("Connecting to WiFi with static IP");
-    WiFi.setHostname(CAIXA_HOST_NAME);
-    WiFi.config(CAIXA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
+    // Serial.println("Connecting to WiFi with static IP");
+    switch (SYSTEM_APPLICATION_TYPE)
+    {
+    case CISTERNA:
+        WiFi.setHostname(CISTERNA_HOST_NAME);
+        // WiFi.config(CISTERNA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
+        break;
+    case CAIXA:
+        WiFi.setHostname(CAIXA_HOST_NAME);
+        // WiFi.config(CAIXA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
+        break;
+    }
     connectToWifi();
 }
 
