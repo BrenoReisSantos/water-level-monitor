@@ -47,12 +47,14 @@ const float FULL_LEVEL_PERCENTAGE = 85.f;
 const float EMPTY_LEVEL_PERCENTAGE = 50.f;
 
 // Mudar para esse tipo de entrada
-const float FULL_HEIGHT;
-const float EMPTY_HEIGHT;
+const float FULL_HEIGHT = 25.f;
+const float EMPTY_HEIGHT = 5.f;
+
+float fullPercentage;
+float emptyPercentage;
 
 // Variáveis de Controle / Estados
-bool isFull = false;
-bool isEmpty = false;
+byte waterLevelState = 0; // 0 EMPTY, 1 FULL, 2 NEITHER
 bool lock = false;
 bool waterOut = false;
 bool waterIn = false;
@@ -64,7 +66,11 @@ float waterLevelPercentage = 0.f;
 const int FULL_PIN = 2;
 const int EMPTY_PIN = 4;
 
-const int WATER_OUT_PIN; // Pino que vai controlar o relé
+// const int WATER_OUT_PIN; // Pino que vai controlar o relé
+
+// Buffer para calcular o tempo estimado de esvaziar/encher
+const int HISTORY_QUEUE_SIZE = 15;
+float waterLevelHistoryQueue[HISTORY_QUEUE_SIZE];
 
 void setup()
 {
@@ -75,8 +81,16 @@ void setup()
     configUTCTime();
     connectToWifiWithStaticIP();
     configureWebServer();
+
+    initializeWaterLevelHistoryQueue();
+
+    fullPercentage = (FULL_HEIGHT / SENSOR_HEIGHT) * 100;
+    emptyPercentage = (EMPTY_HEIGHT / SENSOR_HEIGHT) * 100;
+    Serial.printf("Porcentagem máxima: %f \n", fullPercentage);
+    Serial.printf("Porcentagem mínima: %f \n", emptyPercentage);
 }
 
+/// ------------------------- LOOP PRINCIPAL -------------------------
 void loop()
 {
 
@@ -87,16 +101,17 @@ void loop()
     waterLevelPercentage = levelPercentage;
 
     // Serial.print(distance_cm);
-
     // printLevelInPercentage(levelPercentage);
 
     updateLevelPins(levelPercentage);
-
     registerLevel(levelPercentage);
+
+    calculateEstimateTime();
 
     // Serial.println();
     delay(1000);
 }
+/// -------------------------------------------------------------------
 
 float limitLevelPercentage(float levelPercentage)
 {
@@ -110,6 +125,10 @@ float limitLevelPercentage(float levelPercentage)
 // Por enquanto só printando
 void registerLevel(float levelPercentage)
 {
+    if (isQueueFull(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE))
+        popQueue(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE);
+    pushQueue(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE, levelPercentage);
+
     Serial.print(year());
     Serial.print("-");
     Serial.print(month());
@@ -124,6 +143,22 @@ void registerLevel(float levelPercentage)
     Serial.print(" ");
     Serial.print(levelPercentage);
     Serial.print("%");
+    String stateText;
+    // Remover isso ao escrever no SD
+    switch (waterLevelState)
+    {
+    case 0:
+        stateText = "EMPTY";
+        break;
+    case 1:
+        stateText = "FULL";
+        break;
+    case 2:
+        stateText = "AVERAGE";
+        break;
+    }
+    Serial.printf(" MAX: %f MIN: %f %s", fullPercentage, emptyPercentage, stateText);
+    // -----------------------------
     Serial.println();
 }
 
@@ -138,21 +173,29 @@ void updateLevelPins(float levelPercentage)
 {
     if (levelPercentage > 100.f)
         levelPercentage = 100.f;
-    if (levelPercentage <= EMPTY_LEVEL_PERCENTAGE)
+    if (levelPercentage <= emptyPercentage)
     {
         digitalWrite(FULL_PIN, LOW);
         digitalWrite(EMPTY_PIN, HIGH);
+        waterLevelState = 0;
     }
-    else if (levelPercentage >= FULL_LEVEL_PERCENTAGE)
+    else if (levelPercentage >= fullPercentage)
     {
-        digitalWrite(EMPTY_PIN, LOW);
         digitalWrite(FULL_PIN, HIGH);
+        digitalWrite(EMPTY_PIN, LOW);
+        waterLevelState = 1;
     }
     else
     {
-        digitalWrite(EMPTY_PIN, LOW);
         digitalWrite(FULL_PIN, LOW);
+        digitalWrite(EMPTY_PIN, LOW);
+        waterLevelState = 2;
     }
+}
+
+void calculateEstimateTime()
+{
+    printArray(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE);
 }
 
 void connectToWifi()
@@ -210,6 +253,7 @@ void connectToWifiWithStaticIP()
         // WiFi.config(CAIXA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
         break;
     }
+    Serial.println(WiFi.macAddress());
     connectToWifi();
 }
 
@@ -222,7 +266,17 @@ void configureWebServer()
                  {
         Serial.println("Acesso a rota: /stats/fullness");
         String responseText;
-        isFull ? responseText = "FULL" : isEmpty ? responseText = "EMPTY" : responseText = "AVERAGE";
+        switch (waterLevelState) {
+            case 0:
+                responseText = "EMPTY";
+                break;
+            case 1:
+                responseText = "FULL";
+                break;
+            case 2:
+                responseText = "AVERAGE";
+                break;
+        }
         request->send(200, "text/plain", responseText); });
     webServer.on("/stats/waterlevel", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
@@ -232,3 +286,62 @@ void configureWebServer()
     Serial.println("Iniciando Servidor");
     webServer.begin();
 }
+
+// --------------- Funçoes de Fila -------------------
+void initializeWaterLevelHistoryQueue()
+{
+    for (int index = 0; index < HISTORY_QUEUE_SIZE; index++)
+    {
+        waterLevelHistoryQueue[index] = -1.f;
+    }
+}
+
+bool isQueueFull(float *queue, int queueSize)
+{
+    for (int index = 0; index < HISTORY_QUEUE_SIZE; index++)
+    {
+        if (waterLevelHistoryQueue[index] == -1.f)
+            return true;
+    }
+    return false;
+}
+
+void pushQueue(float *queue, int queueSize, float element)
+{
+    if (isQueueFull(queue, queueSize))
+        return;
+    for (int index = 0; index < queueSize; index++)
+    {
+        if (queue[index] == -1.f)
+            queue[index] = element;
+    }
+}
+
+float popQueue(float *queue, int queueSize)
+{
+    if (queue[0] == -1.f)
+        return -1.f;
+    float poppedElement = queue[0];
+    shiftQueueLeft(queue, queueSize);
+    return poppedElement;
+}
+
+void shiftQueueLeft(float *array, int arraySize)
+{
+    for (int index = 0; index < arraySize; index++)
+    {
+        if (index == arraySize)
+            array[index] = -1;
+        array[index] = array[index + 1];
+    }
+}
+
+void printArray(float *array, int arraySize)
+{
+    for (int index = 0; index < arraySize; index++)
+    {
+        Serial.printf("%f ", array[index]);
+    }
+    Serial.println();
+}
+// ----------------------------------------------------
