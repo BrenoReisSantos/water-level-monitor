@@ -13,6 +13,16 @@ O projeto tem como objetivo realizar o monitoramento do nível da água de 1 Cis
 
 <br>
 
+# Clonando o Repositório
+
+Antes de qualquer coisa, instale as extensões: C/C++ e Arduino.
+
+- Para conseguir desenvolver, ou testar essa aplicação, é necessário ter instalado na máquina o [Arduino IDE](https://www.arduino.cc/en/software) (última versão testada 1.8.19). Por fim, reinicie o vs code
+- em seguida, já com o projeto clonado na sua máquina, abra o arquivo ```.vscode/c_cpp_properties.json``` e altere todas as referências de nome de usuário para o nome do usuário do seu computador (no momento esta como "breno". Então, basta mudar para o nome do seu usuário;
+- em seguida pegue tudo dentro da pasta "libraries" do projeto e cole na pasta ```Documentos/Arduino/libraries```
+- em seguida, aperte F1 para abrir a paleta de comando, digite "Arduino" e clique no comando "Board Manager" e instale o pacote "esp32 by Espressif Systems Version". Por fim, instale a 
+- por último, você pode reparar que, talvez, a linha no arquivo ```.vscode/c_cpp_properties.json``` chamada ```compilerPath```pode estar acusando um erro. Para resolver isso, vá para o mesmo caminho, até logo antes 3 últimos endereços. Por exemplo: com o caminho para ```C:\Users\breno\AppData\Local\Arduino15\packages\esp32\tools\xtensa-esp32-elf-gcc\1.22.0-97-gc752ad5-5.2.0\bin\xtensa-esp32-elf-g++``` dando erro, vá até ```C:\Users\breno\AppData\Local\Arduino15\packages\esp32\tools\xtensa-esp32-elf-gcc\```. Por fim, clique na pasta que aparece na tela, que vai ter o formato do nome parecido com o anterior e substituia o final do caminho por esse novo caminho encontrado.
+
 # Como Utilizar
 
 O Programa possui algumas variáveis para realizar o controle e também conta com uma pequena API para poder compartilhar informações sobre o estado da caixa/cisterna, e até receber comandos.
