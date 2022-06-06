@@ -9,7 +9,10 @@
 #define CISTERNA 1
 #define CAIXA 2
 
-const byte SYSTEM_APPLICATION_TYPE = CISTERNA;
+#define CAIXA_IP "000.000.000.000"
+#define CISTERNA_IP IPAddress(192, 168, 0, 59);
+
+const byte TIPO_DE_RECIPIENTE = CISTERNA;
 
 // Configuração do WIFI
 const char *WIFI_SSID = "BRENAN";
@@ -32,7 +35,7 @@ const IPAddress CISTERNA_STATIC_IP = IPAddress(192, 168, 1, 11);
 // Servidor para pegar horário
 const char *TIME_SERVER = "pool.ntp.org";
 
-// Configração do fuso-horário
+// Configuração do fuso-horário
 const int BRAZIL_TIME_ZONE = -3 * 3600;
 struct tm timeinfo;
 
@@ -43,91 +46,96 @@ UltraSonicDistanceSensor distanceSensor(TRIGGER_PIN, ECHO_PIN);
 
 // Configuração da dos alertas de Vazio e Cheio
 const float SENSOR_HEIGHT = 30.f;
-const float FULL_LEVEL_PERCENTAGE = 85.f;
-const float EMPTY_LEVEL_PERCENTAGE = 50.f;
 
-// Mudar para esse tipo de entrada
-const float FULL_HEIGHT = 25.f;
-const float EMPTY_HEIGHT = 5.f;
+const float ALTURA_QUANDO_CHEIO = 25.f;
+const float ALTURA_QUANDO_VAZIO = 5.f;
 
-float fullPercentage;
-float emptyPercentage;
+const float PORCENTAGEM_QUANDO_CHEIO = (ALTURA_QUANDO_CHEIO / SENSOR_HEIGHT) * 100;
+const float PORCENTAGEM_QUANDO_VAZIO = (ALTURA_QUANDO_VAZIO / SENSOR_HEIGHT) * 100;
 
 // Variáveis de Controle / Estados
-byte waterLevelState = 0; // 0 EMPTY, 1 FULL, 2 NEITHER
-bool lock = false;
-bool waterOut = false;
-bool waterIn = false;
+byte estadoDoNivelDeAgua = 0; // 0 VAZIO, 1 MEDIANO, 2 CHEIO
+bool trava = false;
+bool ligarBomba = false;
+bool enchendo = false;
 
 // Nível da Água
-float waterLevelPercentage = 0.f;
+float porcentagemDoNivelDeAgua = 0.f;
 
 // Configuração dos pinos de Vazio e Cheio (Vai ser retirado ao final)
-const int FULL_PIN = 2;
-const int EMPTY_PIN = 4;
+const int PINO_CHEIO = 2;
+const int PINO_VAZIO = 4;
 
-// const int WATER_OUT_PIN; // Pino que vai controlar o relé
+const int PINO_BOMBEAR = 5; // Pino que vai controlar o relé e ligar a bomba
 
 // Buffer para calcular o tempo estimado de esvaziar/encher
-const int HISTORY_QUEUE_SIZE = 15;
-float waterLevelHistoryQueue[HISTORY_QUEUE_SIZE];
+const int TAMANHO_HISTORICO_DE_NIVEL = 15;
+float historicoNivelDeAgua[TAMANHO_HISTORICO_DE_NIVEL];
 
 void setup()
 {
     Serial.begin(115200);
-    pinMode(FULL_PIN, OUTPUT);
-    pinMode(EMPTY_PIN, OUTPUT);
+    pinMode(PINO_CHEIO, OUTPUT);
+    pinMode(PINO_VAZIO, OUTPUT);
 
-    configUTCTime();
+    if (TIPO_DE_RECIPIENTE == CISTERNA)
+        pinMode(PINO_BOMBEAR, OUTPUT);
+
+    configuraFusoUTC();
     connectToWifiWithStaticIP();
-    configureWebServer();
+    configuraWebServer();
 
-    initializeWaterLevelHistoryQueue();
+    inicializaArrayDeHistoricoDeNiveis();
 
-    fullPercentage = (FULL_HEIGHT / SENSOR_HEIGHT) * 100;
-    emptyPercentage = (EMPTY_HEIGHT / SENSOR_HEIGHT) * 100;
-    Serial.printf("Porcentagem máxima: %f \n", fullPercentage);
-    Serial.printf("Porcentagem mínima: %f \n", emptyPercentage);
+    Serial.printf("Porcentagem máxima: %f \n", PORCENTAGEM_QUANDO_CHEIO);
+    Serial.printf("Porcentagem mínima: %f \n", PORCENTAGEM_QUANDO_VAZIO);
 }
 
-/// ------------------------- LOOP PRINCIPAL -------------------------
+// ------------------------- LOOP PRINCIPAL -------------------------
 void loop()
 {
 
     // Serial.print("Printando a distancia: ");
     float distanceCm = distanceSensor.measureDistanceCm();
-    float levelPercentage = (1 - (distanceCm / SENSOR_HEIGHT)) * 100;
-    levelPercentage = limitLevelPercentage(levelPercentage);
-    waterLevelPercentage = levelPercentage;
+    float nivelDeAguaEmPorcentagem = (1 - (distanceCm / SENSOR_HEIGHT)) * 100;
+    nivelDeAguaEmPorcentagem = limitLevelPercentage(nivelDeAguaEmPorcentagem);
+    porcentagemDoNivelDeAgua = nivelDeAguaEmPorcentagem;
 
     // Serial.print(distance_cm);
-    // printLevelInPercentage(levelPercentage);
+    // printLevelInPercentage(nivelDeAguaEmPorcentagem);
 
-    updateLevelPins(levelPercentage);
-    registerLevel(levelPercentage);
+    atualizaPinosDeNivel(nivelDeAguaEmPorcentagem);
+    registraNivel(nivelDeAguaEmPorcentagem);
 
-    calculateEstimateTime();
+    if (TIPO_DE_RECIPIENTE == CISTERNA)
+        ativaBomba();
+
+    calculaTempoEstimado();
 
     // Serial.println();
     delay(1000);
 }
-/// -------------------------------------------------------------------
+// -------------------------------------------------------------------
 
-float limitLevelPercentage(float levelPercentage)
+// limita o valor do nível para nunca passar além de 100 ou se tornar negativo
+float limitLevelPercentage(float nivelDeAguaEmPorcentagem)
 {
-    if (levelPercentage > 100.f)
-        levelPercentage = 100.f;
-    if (levelPercentage < 0.f)
-        levelPercentage = 0.f;
-    return levelPercentage;
+    if (nivelDeAguaEmPorcentagem > 100.f)
+        nivelDeAguaEmPorcentagem = 100.f;
+    if (nivelDeAguaEmPorcentagem < 0.f)
+        nivelDeAguaEmPorcentagem = 0.f;
+    return nivelDeAguaEmPorcentagem;
 }
 
 // Por enquanto só printando
-void registerLevel(float levelPercentage)
+// TODO: registrar o nível no cartão SD
+// Registra o nível no cartão SD
+void registraNivel(float nivelDeAguaEmPorcentagem)
 {
-    if (isQueueFull(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE))
-        popQueue(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE);
-    pushQueue(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE, levelPercentage);
+
+    if (filaCheia(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL))
+        desenfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL);
+    enfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL, nivelDeAguaEmPorcentagem);
 
     Serial.print(year());
     Serial.print("-");
@@ -141,64 +149,74 @@ void registerLevel(float levelPercentage)
     Serial.print(":");
     Serial.print(second());
     Serial.print(" ");
-    Serial.print(levelPercentage);
+    Serial.print(nivelDeAguaEmPorcentagem);
     Serial.print("%");
     String stateText;
     // Remover isso ao escrever no SD
-    switch (waterLevelState)
+    switch (estadoDoNivelDeAgua)
     {
     case 0:
-        stateText = "EMPTY";
+        stateText = "VAZIO";
         break;
     case 1:
-        stateText = "FULL";
+        stateText = "MEDIANO";
         break;
     case 2:
-        stateText = "AVERAGE";
+        stateText = "CHEIO";
         break;
     }
-    Serial.printf(" MAX: %f MIN: %f %s", fullPercentage, emptyPercentage, stateText);
+    Serial.printf(" MAX: %f MIN: %f %s", PORCENTAGEM_QUANDO_CHEIO, PORCENTAGEM_QUANDO_VAZIO, stateText);
     // -----------------------------
     Serial.println();
 }
 
-void printLevelInPercentage(float levelPercentage)
+// TODO: Verificar utilizade dessa função
+void printLevelInPercentage(float nivelDeAguaEmPorcentagem)
 {
     Serial.print("Distance %: ");
-    Serial.print(levelPercentage);
+    Serial.print(nivelDeAguaEmPorcentagem);
     Serial.println();
 }
 
-void updateLevelPins(float levelPercentage)
+// Controla os pinos que dizem se o recipiente está cheio, vazio ou em algum nível intermediário
+void atualizaPinosDeNivel(float nivelDeAguaEmPorcentagem)
 {
-    if (levelPercentage > 100.f)
-        levelPercentage = 100.f;
-    if (levelPercentage <= emptyPercentage)
+    if (nivelDeAguaEmPorcentagem <= PORCENTAGEM_QUANDO_VAZIO)
     {
-        digitalWrite(FULL_PIN, LOW);
-        digitalWrite(EMPTY_PIN, HIGH);
-        waterLevelState = 0;
+        digitalWrite(PINO_CHEIO, LOW);
+        digitalWrite(PINO_VAZIO, HIGH);
+        estadoDoNivelDeAgua = 0;
     }
-    else if (levelPercentage >= fullPercentage)
+    else if (nivelDeAguaEmPorcentagem >= PORCENTAGEM_QUANDO_CHEIO)
     {
-        digitalWrite(FULL_PIN, HIGH);
-        digitalWrite(EMPTY_PIN, LOW);
-        waterLevelState = 1;
+        digitalWrite(PINO_CHEIO, HIGH);
+        digitalWrite(PINO_VAZIO, LOW);
+        estadoDoNivelDeAgua = 2;
     }
     else
     {
-        digitalWrite(FULL_PIN, LOW);
-        digitalWrite(EMPTY_PIN, LOW);
-        waterLevelState = 2;
+        digitalWrite(PINO_CHEIO, LOW);
+        digitalWrite(PINO_VAZIO, LOW);
+        estadoDoNivelDeAgua = 1;
     }
 }
 
-void calculateEstimateTime()
+// TODO: Calcula o tempo estimado de enchimento ou esvaziamento
+void calculaTempoEstimado()
 {
-    printArray(waterLevelHistoryQueue, HISTORY_QUEUE_SIZE);
+    mostraArray(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL);
 }
 
-void connectToWifi()
+// Controla o pino que ligará a bomba baseado nas variáveis "ativaBomba" e "trava"
+void ativaBomba()
+{
+    if (estadoDoNivelDeAgua == 0 || trava)
+        ligarBomba = false;
+    digitalWrite(PINO_BOMBEAR, (ligarBomba ? HIGH : LOW));
+}
+
+// Conecta o ESP32 no WiFi
+void conectaAoWifi()
 {
     Serial.print("Conectando a:");
     Serial.print(WIFI_SSID);
@@ -223,9 +241,9 @@ void connectToWifi()
     Serial.println("\nWiFi conectado.");
 }
 
-void configUTCTime()
+void configuraFusoUTC()
 {
-    connectToWifi();
+    conectaAoWifi();
     // Não funciona com ip estático...
     configTime(BRAZIL_TIME_ZONE, 0, TIME_SERVER);
     if (!getLocalTime(&timeinfo))
@@ -239,10 +257,11 @@ void configUTCTime()
     WiFi.disconnect();
 }
 
+// Não está funcionando
 void connectToWifiWithStaticIP()
 {
     // Serial.println("Connecting to WiFi with static IP");
-    switch (SYSTEM_APPLICATION_TYPE)
+    switch (TIPO_DE_RECIPIENTE)
     {
     case CISTERNA:
         WiFi.setHostname(CISTERNA_HOST_NAME);
@@ -254,19 +273,20 @@ void connectToWifiWithStaticIP()
         break;
     }
     Serial.println(WiFi.macAddress());
-    connectToWifi();
+    conectaAoWifi();
 }
 
-void configureWebServer()
+//  Configura os EndPoints para a API
+void configuraWebServer()
 {
     // Também não funciona com o IP estático.
     Serial.println("Configurando o WebServer...");
     Serial.println("Configurando rotas");
-    webServer.on("/stats/fullness", HTTP_GET, [](AsyncWebServerRequest *request)
+    webServer.on("/state", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
-        Serial.println("Acesso a rota: /stats/fullness");
+        Serial.println("Acesso a rota: /state");
         String responseText;
-        switch (waterLevelState) {
+        switch (estadoDoNivelDeAgua) {
             case 0:
                 responseText = "EMPTY";
                 break;
@@ -278,69 +298,115 @@ void configureWebServer()
                 break;
         }
         request->send(200, "text/plain", responseText); });
-    webServer.on("/stats/waterlevel", HTTP_GET, [](AsyncWebServerRequest *request)
+
+    webServer.on("/level", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
-        Serial.println("Acesso a rota: /stats/waterlevel");
-        String responseText = String(waterLevelPercentage, 2);
+        Serial.println("Acesso a rota: /level");
+        String responseText = String(porcentagemDoNivelDeAgua, 2);
         request->send(200, "text/plain", responseText); });
+
+    webServer.on("/lock", HTTP_PATCH, [](AsyncWebServerRequest *request)
+                 {
+        Serial.println("Acesso a rota: /lock");
+        trava = !trava;
+        String responseText = trava ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText); });
+
+    // -------- FUNÇÕES DA CISTERNA --------
+    if (TIPO_DE_RECIPIENTE == CISTERNA)
+    {
+        webServer.on("/pump", HTTP_PUT, [](AsyncWebServerRequest *request)
+                     {
+        Serial.println("Acesso a rota: /pump");
+        if (!request->hasParam("mode")) {
+            request->send(400, "text/plain", "parâmetro \"mode\" necessário");
+            return;
+        }
+        String modo = request->getParam("mode")->value();
+        if (modo != "on" && modo != "off") {
+            request->send(400, "text/plain", "valores aceitos pelo parâmetro \"mode\" são: \"on\" - para ligar e \"off\" para desligar");
+            return;
+        }
+        if (modo == "on" && (estadoDoNivelDeAgua == 0)) {
+            request->send(400, "text/plain", "Cisterna vazia. Não será possível ligar a Bomba");
+            return;
+        }
+        if (modo == "on" && trava)
+        {
+            request->send(400, "text/plain", "O Sistema está bloqueado. Não será possível ligar a Bomba. Desbloqueie o sistema e tente novamente");
+            return;
+        }
+        ligarBomba = modo == "on" ? true : modo == "off" ? false : ligarBomba; // Caso não seja "on" ou "off", mantém a bomba no estado em que ela estiver.
+        String responseText = ligarBomba ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText); });
+
+        webServer.on("/isPumping", HTTP_GET, [](AsyncWebServerRequest *request)
+                     {
+        Serial.println("Acesso a rota: /isPumping");
+        String responseText = ligarBomba ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText); });
+    }
+    // -------- --------- -- ---------- --------
+
     Serial.println("Iniciando Servidor");
+
     webServer.begin();
 }
 
-// --------------- Funçoes de Fila -------------------
-void initializeWaterLevelHistoryQueue()
+// --------------- Funções de Fila -------------------
+void inicializaArrayDeHistoricoDeNiveis()
 {
-    for (int index = 0; index < HISTORY_QUEUE_SIZE; index++)
+    for (int index = 0; index < TAMANHO_HISTORICO_DE_NIVEL; index++)
     {
-        waterLevelHistoryQueue[index] = -1.f;
+        historicoNivelDeAgua[index] = -1.f;
     }
 }
 
-bool isQueueFull(float *queue, int queueSize)
+bool filaCheia(float *fila, int tamanhoDaFila)
 {
-    for (int index = 0; index < HISTORY_QUEUE_SIZE; index++)
+    for (int index = 0; index < TAMANHO_HISTORICO_DE_NIVEL; index++)
     {
-        if (waterLevelHistoryQueue[index] == -1.f)
-            return true;
+        if (historicoNivelDeAgua[index] == -1.f)
+            return false;
     }
-    return false;
+    return true;
 }
 
-void pushQueue(float *queue, int queueSize, float element)
+void enfileira(float *fila, int tamanhoDaFila, float elemento)
 {
-    if (isQueueFull(queue, queueSize))
+    if (filaCheia(fila, tamanhoDaFila))
         return;
-    for (int index = 0; index < queueSize; index++)
+    for (int index = 0; index < tamanhoDaFila; index++)
     {
-        if (queue[index] == -1.f)
-            queue[index] = element;
+        if (fila[index] <= -1.f)
+            fila[index] = elemento;
     }
 }
 
-float popQueue(float *queue, int queueSize)
+float desenfileira(float *fila, int tamanhoDaFila)
 {
-    if (queue[0] == -1.f)
+    if (fila[0] == -1.f)
         return -1.f;
-    float poppedElement = queue[0];
-    shiftQueueLeft(queue, queueSize);
+    float poppedElement = fila[0];
+    moveElementosParaEsquerda(fila, tamanhoDaFila);
     return poppedElement;
 }
 
-void shiftQueueLeft(float *array, int arraySize)
+void moveElementosParaEsquerda(float *vetor, int tamanhoDoVetor)
 {
-    for (int index = 0; index < arraySize; index++)
+    for (int index = 0; index < tamanhoDoVetor; index++)
     {
-        if (index == arraySize)
-            array[index] = -1;
-        array[index] = array[index + 1];
+        if (index == tamanhoDoVetor)
+            vetor[index] = -1;
+        vetor[index] = vetor[index + 1];
     }
 }
 
-void printArray(float *array, int arraySize)
+void mostraArray(float *vetor, int tamanhoDoVetor)
 {
-    for (int index = 0; index < arraySize; index++)
+    for (int index = 0; index < tamanhoDoVetor; index++)
     {
-        Serial.printf("%f ", array[index]);
+        Serial.printf("%f ", vetor[index]);
     }
     Serial.println();
 }
