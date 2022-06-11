@@ -60,7 +60,8 @@ As placas ainda não conseguem se conectar com IP estático na rede, então deve
 
 # Roadmap
 
-- A forma de utilizar as constantes de gatilho para ***cheio*** e ***vazio*** serão alteradas no futuro.
-- Utilização de IP estático. (Configuração atual não está funcionando corretamente)
+- A forma de utilizar as constantes de gatilho para ***cheio*** e ***vazio*** serão alteradas no futuro. ✅
+- Utilização de IP estático. (Configuração atual não está funcionando corretamente) ❌
 - Adicionar interações em ambos sentidos entre a placa da caixa e da cisterna
 - Implementar a funcionalidade do ***lock*** para travar o funcionamento das placas, de forma individual.
+- Implementar um sinal de vida entre a caixa e a cisterna. Cenário: Caixa pede água e queima no processo, dessa forma a cisterna nunca vai parar de fornecer água. Então, devo implementar um sinal de vida para a cisterna sempre verificar se a caixa está lá. Caso a caixa não responda o sinal de vida, a cisterna vai interromper o bombeamento

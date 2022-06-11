@@ -288,13 +288,13 @@ void configuraWebServer()
         String responseText;
         switch (estadoDoNivelDeAgua) {
             case 0:
-                responseText = "EMPTY";
-                break;
-            case 1:
-                responseText = "FULL";
+                responseText = "VAZIO";
                 break;
             case 2:
-                responseText = "AVERAGE";
+                responseText = "CHEIO";
+                break;
+            case 1:
+                responseText = "MEDIANO";
                 break;
         }
         request->send(200, "text/plain", responseText); });
@@ -350,6 +350,14 @@ void configuraWebServer()
 
     Serial.println("Iniciando Servidor");
 
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    webServer.onNotFound([](AsyncWebServerRequest *request)
+                         {
+  if (request->method() == HTTP_OPTIONS) {
+    request->send(200);
+  } else {
+    request->send(404);
+  } });
     webServer.begin();
 }
 
