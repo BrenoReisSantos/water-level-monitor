@@ -54,7 +54,11 @@ const float PORCENTAGEM_QUANDO_CHEIO = (ALTURA_QUANDO_CHEIO / SENSOR_HEIGHT) * 1
 const float PORCENTAGEM_QUANDO_VAZIO = (ALTURA_QUANDO_VAZIO / SENSOR_HEIGHT) * 100;
 
 // Variáveis de Controle / Estados
-byte estadoDoNivelDeAgua = 0; // 0 VAZIO, 1 MEDIANO, 2 CHEIO
+#define VAZIO 0
+#define MEDIANO 1
+#define CHEIO 2
+
+byte estadoDoNivelDeAgua = VAZIO; // 0 VAZIO, 1 MEDIANO, 2 CHEIO
 bool trava = false;
 bool ligarBomba = false;
 bool enchendo = false;
@@ -110,12 +114,24 @@ void loop()
     if (TIPO_DE_RECIPIENTE == CISTERNA)
         ativaBomba();
 
+    if (TIPO_DE_RECIPIENTE == CAIXA)
+        gerenciaNivelDaCaixa();
+
     calculaTempoEstimado();
 
     // Serial.println();
     delay(1000);
 }
 // -------------------------------------------------------------------
+
+// Faz o gerenciamento do nível da Caixa d'água
+void gerenciaNivelDaCaixa()
+{
+    if (estadoDoNivelDeAgua == VAZIO)
+        ; // pede água
+    if (estadoDoNivelDeAgua == CHEIO)
+        ; // pede para a bomba parar de forneces água
+}
 
 // limita o valor do nível para nunca passar além de 100 ou se tornar negativo
 float limitLevelPercentage(float nivelDeAguaEmPorcentagem)
@@ -155,13 +171,13 @@ void registraNivel(float nivelDeAguaEmPorcentagem)
     // Remover isso ao escrever no SD
     switch (estadoDoNivelDeAgua)
     {
-    case 0:
+    case VAZIO:
         stateText = "VAZIO";
         break;
-    case 1:
+    case MEDIANO:
         stateText = "MEDIANO";
         break;
-    case 2:
+    case CHEIO:
         stateText = "CHEIO";
         break;
     }
@@ -185,19 +201,19 @@ void atualizaPinosDeNivel(float nivelDeAguaEmPorcentagem)
     {
         digitalWrite(PINO_CHEIO, LOW);
         digitalWrite(PINO_VAZIO, HIGH);
-        estadoDoNivelDeAgua = 0;
+        estadoDoNivelDeAgua = VAZIO;
     }
     else if (nivelDeAguaEmPorcentagem >= PORCENTAGEM_QUANDO_CHEIO)
     {
         digitalWrite(PINO_CHEIO, HIGH);
         digitalWrite(PINO_VAZIO, LOW);
-        estadoDoNivelDeAgua = 2;
+        estadoDoNivelDeAgua = CHEIO;
     }
     else
     {
         digitalWrite(PINO_CHEIO, LOW);
         digitalWrite(PINO_VAZIO, LOW);
-        estadoDoNivelDeAgua = 1;
+        estadoDoNivelDeAgua = MEDIANO;
     }
 }
 
@@ -210,7 +226,9 @@ void calculaTempoEstimado()
 // Controla o pino que ligará a bomba baseado nas variáveis "ativaBomba" e "trava"
 void ativaBomba()
 {
-    if (estadoDoNivelDeAgua == 0 || trava)
+    if (ligarBomba == true)
+        ; // verifica se a caixa está viva com o comando ping
+    if (estadoDoNivelDeAgua == VAZIO || trava)
         ligarBomba = false;
     digitalWrite(PINO_BOMBEAR, (ligarBomba ? HIGH : LOW));
 }
@@ -287,13 +305,13 @@ void configuraWebServer()
         Serial.println("Acesso a rota: /state");
         String responseText;
         switch (estadoDoNivelDeAgua) {
-            case 0:
+            case VAZIO:
                 responseText = "VAZIO";
                 break;
-            case 2:
+            case CHEIO:
                 responseText = "CHEIO";
                 break;
-            case 1:
+            case MEDIANO:
                 responseText = "MEDIANO";
                 break;
         }
@@ -305,11 +323,34 @@ void configuraWebServer()
         String responseText = String(porcentagemDoNivelDeAgua, 2);
         request->send(200, "text/plain", responseText); });
 
-    webServer.on("/lock", HTTP_PATCH, [](AsyncWebServerRequest *request)
+    webServer.on("/lock", HTTP_PUT, [](AsyncWebServerRequest *request)
                  {
         Serial.println("Acesso a rota: /lock");
-        trava = !trava;
+        if (!request->hasParam("mode"))
+        {
+            request->send(400, "text/plain", "parâmetro \"mode\" necessário");
+            return;
+        }
+        String modo = request->getParam("mode")->value();
+        if (modo != "on" && modo != "off")
+        {
+            request->send(400, "text/plain", "valores aceitos pelo parâmetro \"mode\" são: \"on\" - para ligar e \"off\" para desligar");
+            return;
+        }
+        trava = modo == "on" ? true : modo == "off" ? false : trava;
         String responseText = trava ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText); });
+
+    webServer.on("/isLocked", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {
+        Serial.println("Acesso a rota: /isLocked");
+        String responseText = trava ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText); });
+
+    webServer.on("/ping", HTTP_GET, [](AsyncWebServerRequest *request)
+                 {
+        Serial.println("Acesso a rota: /ping");
+        String responseText = "pong";
         request->send(200, "text/plain", responseText); });
 
     // -------- FUNÇÕES DA CISTERNA --------
@@ -327,7 +368,7 @@ void configuraWebServer()
             request->send(400, "text/plain", "valores aceitos pelo parâmetro \"mode\" são: \"on\" - para ligar e \"off\" para desligar");
             return;
         }
-        if (modo == "on" && (estadoDoNivelDeAgua == 0)) {
+        if (modo == "on" && (estadoDoNivelDeAgua == VAZIO)) {
             request->send(400, "text/plain", "Cisterna vazia. Não será possível ligar a Bomba");
             return;
         }
