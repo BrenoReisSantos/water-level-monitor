@@ -1,6 +1,7 @@
 #include <DS1307RTC.h>
 #include <HCSR04.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 // #include <SPI.h>
 #include "time.h"
 #include <ESPAsyncWebServer.h>
@@ -9,8 +10,8 @@
 #define CISTERNA 1
 #define CAIXA 2
 
-#define CAIXA_IP "000.000.000.000"
-#define CISTERNA_IP IPAddress(192, 168, 0, 59);
+const String CAIXA_IP = "192.168.0.63";
+const String CISTERNA_IP = "192.168.0.59";
 
 const byte TIPO_DE_RECIPIENTE = CISTERNA;
 
@@ -128,9 +129,9 @@ void loop()
 void gerenciaNivelDaCaixa()
 {
     if (estadoDoNivelDeAgua == VAZIO)
-        ; // pede água
+        controlaABombaPorHTTPRequest(true && !trava);
     if (estadoDoNivelDeAgua == CHEIO)
-        ; // pede para a bomba parar de forneces água
+        ;
 }
 
 // limita o valor do nível para nunca passar além de 100 ou se tornar negativo
@@ -226,11 +227,35 @@ void calculaTempoEstimado()
 // Controla o pino que ligará a bomba baseado nas variáveis "ativaBomba" e "trava"
 void ativaBomba()
 {
-    if (ligarBomba == true)
-        ; // verifica se a caixa está viva com o comando ping
+    String estadoDaCaixa = checaEstadoDaCaixaViaHTTPRequest();
+    if (estadoDaCaixa == "CHEIO" && estadoDaCaixa != "")
+        ligarBomba = false;
     if (estadoDoNivelDeAgua == VAZIO || trava)
         ligarBomba = false;
     digitalWrite(PINO_BOMBEAR, (ligarBomba ? HIGH : LOW));
+}
+
+String checaEstadoDaCaixaViaHTTPRequest()
+{
+    if (WiFi.status() != WL_CONNECTED)
+        return "";
+    HTTPClient http;
+    http.begin("http://" + CAIXA_IP + "/state");
+    int httpResponseCode = http.GET();
+    String response = "";
+    if (httpResponseCode > 0)
+    {
+        response = http.getString(); // Get the response to the request
+
+        Serial.println(httpResponseCode); // Print return code
+        Serial.println(response);         // Print request answer
+    }
+    else
+    {
+        Serial.print("Error on sending POST: ");
+        Serial.println(httpResponseCode);
+    }
+    return response;
 }
 
 // Conecta o ESP32 no WiFi
@@ -273,6 +298,28 @@ void configuraFusoUTC()
     Serial.println("Time got with success");
     Serial.println("Disconnecting WiFi");
     WiFi.disconnect();
+}
+
+void controlaABombaPorHTTPRequest(bool deveLigar)
+{
+    if (WiFi.status() != WL_CONNECTED)
+        return;
+    HTTPClient http;
+    http.begin("http://" + CISTERNA_IP + "/pump?mode=" + (deveLigar ? "on" : "off"));
+    http.addHeader("Content-Type", "text/plain");
+    int httpResponseCode = http.POST("");
+    if (httpResponseCode > 0)
+    {
+        String response = http.getString(); // Get the response to the request
+
+        Serial.println(httpResponseCode); // Print return code
+        Serial.println(response);         // Print request answer
+    }
+    else
+    {
+        Serial.print("Error on sending POST: ");
+        Serial.println(httpResponseCode);
+    }
 }
 
 // Não está funcionando
@@ -323,7 +370,7 @@ void configuraWebServer()
         String responseText = String(porcentagemDoNivelDeAgua, 2);
         request->send(200, "text/plain", responseText); });
 
-    webServer.on("/lock", HTTP_PUT, [](AsyncWebServerRequest *request)
+    webServer.on("/lock", HTTP_POST, [](AsyncWebServerRequest *request)
                  {
         Serial.println("Acesso a rota: /lock");
         if (!request->hasParam("mode"))
@@ -356,7 +403,7 @@ void configuraWebServer()
     // -------- FUNÇÕES DA CISTERNA --------
     if (TIPO_DE_RECIPIENTE == CISTERNA)
     {
-        webServer.on("/pump", HTTP_PUT, [](AsyncWebServerRequest *request)
+        webServer.on("/pump", HTTP_POST, [](AsyncWebServerRequest *request)
                      {
         Serial.println("Acesso a rota: /pump");
         if (!request->hasParam("mode")) {

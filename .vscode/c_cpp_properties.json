@@ -95,6 +95,8 @@
                 "C:\\Users\\breno\\OneDrive\\Documentos\\Arduino\\libraries\\Time-1.6.1",
                 "C:\\Users\\breno\\OneDrive\\Documentos\\Arduino\\libraries\\HCSR04\\src",
                 "C:\\Users\\breno\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.6\\libraries\\WiFi\\src",
+                "C:\\Users\\breno\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.6\\libraries\\HTTPClient\\src",
+                "C:\\Users\\breno\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.6\\libraries\\WiFiClientSecure\\src",
                 "C:\\Users\\breno\\OneDrive\\Documentos\\Arduino\\libraries\\ESPAsyncWebServer\\src",
                 "C:\\Users\\breno\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.6\\libraries\\FS\\src",
                 "C:\\Users\\breno\\OneDrive\\Documentos\\Arduino\\libraries\\AsyncTCP\\src",

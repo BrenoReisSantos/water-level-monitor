@@ -4,5 +4,6 @@
         "*.tcc": "cpp",
         "fstream": "cpp",
         "ostream": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }
