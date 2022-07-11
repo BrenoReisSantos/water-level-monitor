@@ -94,6 +94,8 @@ void setup()
 
     Serial.printf("Porcentagem máxima: %f \n", PORCENTAGEM_QUANDO_CHEIO);
     Serial.printf("Porcentagem mínima: %f \n", PORCENTAGEM_QUANDO_VAZIO);
+
+    Serial.printf("CONFIGURADO COMO: %s", TIPO_DE_RECIPIENTE == 1 ? "CISTERNA" : "CAIXA");
 }
 
 // ------------------------- LOOP PRINCIPAL -------------------------
@@ -227,12 +229,43 @@ void calculaTempoEstimado()
 // Controla o pino que ligará a bomba baseado nas variáveis "ativaBomba" e "trava"
 void ativaBomba()
 {
+    if (!checaVidaDaCaixaViaHTTPRequest())
+        ligarBomba = false;
+
     String estadoDaCaixa = checaEstadoDaCaixaViaHTTPRequest();
     if (estadoDaCaixa == "CHEIO" && estadoDaCaixa != "")
         ligarBomba = false;
     if (estadoDoNivelDeAgua == VAZIO || trava)
         ligarBomba = false;
     digitalWrite(PINO_BOMBEAR, (ligarBomba ? HIGH : LOW));
+}
+
+bool checaVidaDaCaixaViaHTTPRequest()
+{
+    if (WiFi.status() != WL_CONNECTED)
+        return false;
+    HTTPClient http;
+    http.begin("http://" + CAIXA_IP + "/ping");
+    http.setTimeout(300);
+    int httpResponseCode = http.GET();
+    bool response = false;
+    if (httpResponseCode > 0)
+    {
+        String responseText = http.getString(); // Get the response to the request
+
+        Serial.println(httpResponseCode); // Print return code
+        Serial.println(response);         // Print request answer
+        if (responseText == "pong" && httpResponseCode == 200)
+            response = true;
+    }
+    else
+    {
+        Serial.print("Error on sending POST: ");
+        Serial.println(httpResponseCode);
+        response = false;
+    }
+    Serial.println(response);
+    return response;
 }
 
 String checaEstadoDaCaixaViaHTTPRequest()
