@@ -3,7 +3,9 @@
         "chrono": "cpp",
         "*.tcc": "cpp",
         "fstream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "cstring": "cpp",
+        "new": "cpp"
     },
     "cmake.configureOnOpen": false
 }
