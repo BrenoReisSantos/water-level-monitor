@@ -1,13 +1,5 @@
-#include <iostream>
-
-#include <Arduino.h>
-
 #include "CisternaClient.hpp"
 #include "../Monitors/WaterMonitor.hpp"
-
-#include <HTTPClient.h>
-
-using namespace std;
 
 bool CisternaClient::checaVidaDaCaixa()
 {

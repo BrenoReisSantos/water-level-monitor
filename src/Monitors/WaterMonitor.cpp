@@ -23,3 +23,23 @@ void WaterMonitor::atualizaNivel(float distanciaEmCm)
 
     atualizaEstado();
 };
+
+int WaterMonitor::getNivel()
+{
+    return porcentagemDoNivelDeAgua;
+};
+
+bool WaterMonitor::getTrava()
+{
+    return trava;
+};
+
+EstadoDoNivelDeAgua WaterMonitor::getEstado()
+{
+    return estado;
+};
+
+void WaterMonitor::controlaTrava(bool travar)
+{
+    trava = travar;
+};

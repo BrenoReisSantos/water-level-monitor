@@ -25,4 +25,8 @@ protected:
 
 public:
     void atualizaNivel(float distanciaEmCm);
+    int getNivel();
+    bool getTrava();
+    EstadoDoNivelDeAgua getEstado();
+    void controlaTrava(bool travar);
 };

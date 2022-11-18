@@ -8,7 +8,7 @@ class CisternaMonitor : public WaterMonitor
     bool bombaLigada;
 
 public:
+    CisternaMonitor(float alturaDoSensor, float alturaQuandoCheio, float alturaQuandoVazio, CisternaClient *client);
     void controlaBomba(bool ligar);
     void gerenciaBomba();
-    CisternaMonitor::CisternaMonitor(float alturaDoSensor, float alturaQuandoCheio, float alturaQuandoVazio, CisternaClient *client);
 };

@@ -16,6 +16,8 @@ CisternaMonitor::CisternaMonitor(float alturaDoSensor, float alturaQuandoCheio, 
     porcentagemQuandoVazio = (int)((alturaQuandoVazio / alturaDoSensor) * 100);
 
     trava = false;
+
+    bombaLigada = false;
 };
 
 void CisternaMonitor::controlaBomba(bool ligar)
