@@ -29,4 +29,5 @@ public:
     bool getTrava();
     EstadoDoNivelDeAgua getEstado();
     void controlaTrava(bool travar);
+    virtual void gerenciaReservatorio();
 };

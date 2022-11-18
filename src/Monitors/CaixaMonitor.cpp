@@ -17,3 +17,9 @@ CaixaMonitor::CaixaMonitor(float alturaDoSensor, float alturaQuandoCheio, float 
 
     trava = false;
 };
+
+void CaixaMonitor::gerenciaReservatorio()
+{
+    if (estado == Vazio)
+        client->controlaBomba(true);
+};

@@ -1,0 +1,5 @@
+enum TipoRecipiente
+{
+    Caixa,
+    Cisterna
+};

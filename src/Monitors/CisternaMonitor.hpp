@@ -10,5 +10,5 @@ class CisternaMonitor : public WaterMonitor
 public:
     CisternaMonitor(float alturaDoSensor, float alturaQuandoCheio, float alturaQuandoVazio, CisternaClient *client);
     void controlaBomba(bool ligar);
-    void gerenciaBomba();
+    void gerenciaReservatorio();
 };
