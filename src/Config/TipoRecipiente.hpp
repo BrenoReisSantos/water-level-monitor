@@ -1,4 +1,4 @@
-enum TipoRecipiente
+enum TipoReservatorio
 {
     Caixa,
     Cisterna

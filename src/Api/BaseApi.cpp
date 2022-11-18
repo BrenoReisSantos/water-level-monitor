@@ -75,4 +75,15 @@ void BaseApi::configuraRotas()
     postTravaSistema();
     getEstadoDaTrava();
     ping();
+
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    webServer.onNotFound([](AsyncWebServerRequest *request)
+                         {
+        if (request->method() == HTTP_OPTIONS) {
+            request->send(200);
+        } else {
+            request->send(404);
+        } });
+
+    webServer.begin();
 };

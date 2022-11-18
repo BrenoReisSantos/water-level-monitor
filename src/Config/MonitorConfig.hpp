@@ -5,7 +5,7 @@ class MonitorConfig
     float alturaDoSensor;
     float alturaQuandoCheio;
     float alturaQuandoVazio;
-    TipoRecipiente tipoReservatorio;
+    TipoReservatorio tipoReservatorio;
     char *ipOutroReservatorio;
 
 public:
@@ -13,12 +13,12 @@ public:
         float alturaDoSensor,
         float alturaQuandoCheio,
         float alturaQuandoVazio,
-        TipoRecipiente tipoReservatorio,
+        TipoReservatorio tipoReservatorio,
         char *ipOutroReservatorio);
 
     float getAlturaDoSendor();
     float getalturaQuandoCheio();
     float getalturaQuandoVazio();
-    TipoRecipiente getTipoReservatorio();
+    TipoReservatorio getTipoReservatorio();
     char *getIpOutroReservatorio();
 };
