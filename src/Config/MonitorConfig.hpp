@@ -1,14 +1,15 @@
-#include "TipoRecipiente.hpp"
+// #include "TipoRecipiente.hpp"
 
 class MonitorConfig
 {
-    float alturaDoSensor;
-    float alturaQuandoCheio;
-    float alturaQuandoVazio;
-    TipoReservatorio tipoReservatorio;
-    char *ipOutroReservatorio;
 
 public:
+    enum TipoReservatorio
+    {
+        Caixa,
+        Cisterna
+    };
+
     MonitorConfig(
         float alturaDoSensor,
         float alturaQuandoCheio,
@@ -21,4 +22,11 @@ public:
     float getalturaQuandoVazio();
     TipoReservatorio getTipoReservatorio();
     char *getIpOutroReservatorio();
+
+private:
+    float alturaDoSensor;
+    float alturaQuandoCheio;
+    float alturaQuandoVazio;
+    TipoReservatorio tipoReservatorio;
+    char *ipOutroReservatorio;
 };

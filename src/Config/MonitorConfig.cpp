@@ -1,10 +1,11 @@
 #include "MonitorConfig.hpp"
 
-MonitorConfig::MonitorConfig(float alturaDoSensor,
-                             float alturaQuandoCheio,
-                             float alturaQuandoVazio,
-                             TipoReservatorio tipoReservatorio,
-                             char *ipOutroReservatorio)
+MonitorConfig::MonitorConfig(
+    float alturaDoSensor,
+    float alturaQuandoCheio,
+    float alturaQuandoVazio,
+    TipoReservatorio tipoReservatorio,
+    char *ipOutroReservatorio)
 {
     this->alturaDoSensor = alturaDoSensor;
     this->alturaQuandoCheio = alturaQuandoCheio;
@@ -28,7 +29,7 @@ float MonitorConfig::getalturaQuandoVazio()
     return alturaQuandoVazio;
 };
 
-TipoReservatorio MonitorConfig::getTipoReservatorio()
+MonitorConfig::TipoReservatorio MonitorConfig::getTipoReservatorio()
 {
     return tipoReservatorio;
 };

@@ -1,5 +1,0 @@
-enum TipoReservatorio
-{
-    Caixa,
-    Cisterna
-};

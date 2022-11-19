@@ -1,10 +1,12 @@
 #include "BaseApi.hpp"
 #include "../Monitors/CisternaMonitor.hpp"
 
-class CisternaApi : BaseApi
+class CisternaApi : public BaseApi
 {
-    void controlaBomba(bool deveLigar);
+    void controlaBomba();
+    void getEstadoBomba();
 
 public:
-    CisternaApi(CisternaMonitor *cisterna);
+    CisternaApi(WaterMonitor *cisterna);
+    void configuraRotas() override;
 };

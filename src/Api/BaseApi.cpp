@@ -1,6 +1,11 @@
 #include "BaseApi.hpp"
 #include <ESPAsyncWebServer.h>
 
+BaseApi::BaseApi(WaterMonitor *monitor)
+{
+    this->monitor = monitor;
+};
+
 void BaseApi::getNivel()
 {
     webServer.on("/level", HTTP_GET, [this](AsyncWebServerRequest *request)

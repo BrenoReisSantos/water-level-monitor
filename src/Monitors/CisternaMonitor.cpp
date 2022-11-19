@@ -34,3 +34,8 @@ void CisternaMonitor::gerenciaReservatorio()
     if (estadoDaCaixa == Cheio || estado == Vazio || trava)
         bombaLigada = false;
 };
+
+bool CisternaMonitor::getEstadoBomba()
+{
+    return bombaLigada;
+};

@@ -4,6 +4,8 @@
 class BaseApi
 {
 protected:
+    BaseApi(WaterMonitor *monitor);
+
     AsyncWebServer webServer = AsyncWebServer(80);
     WaterMonitor *monitor;
 
@@ -14,5 +16,5 @@ protected:
     void ping();
 
 public:
-    void configuraRotas();
+    virtual void configuraRotas();
 };

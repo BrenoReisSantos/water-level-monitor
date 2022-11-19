@@ -1,10 +1,10 @@
 #include "BaseApi.hpp"
 #include "../Monitors/CaixaMonitor.hpp"
 
-class CaixaApi : BaseApi
+class CaixaApi : public BaseApi
 {
-    CaixaMonitor *caixa;
 
 public:
-    CaixaApi(CaixaMonitor *caixa);
+    CaixaApi(WaterMonitor *caixa);
+    void configuraRotas() override;
 };

@@ -11,4 +11,5 @@ public:
     CisternaMonitor(float alturaDoSensor, float alturaQuandoCheio, float alturaQuandoVazio, CisternaClient *client);
     void controlaBomba(bool ligar);
     void gerenciaReservatorio();
+    bool getEstadoBomba();
 };

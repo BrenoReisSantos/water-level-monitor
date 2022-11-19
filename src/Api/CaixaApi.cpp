@@ -1,6 +1,11 @@
 #include "CaixaApi.hpp"
 
-CaixaApi::CaixaApi(CaixaMonitor *caixa)
+CaixaApi::CaixaApi(WaterMonitor *caixa) : BaseApi(caixa)
 {
-    this->caixa = caixa;
+    monitor = caixa;
+};
+
+void CaixaApi::configuraRotas()
+{
+    BaseApi::configuraRotas();
 };
