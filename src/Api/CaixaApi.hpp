@@ -1,3 +1,6 @@
+#ifndef CAIXAAPI_H
+#define CAIXAAPI_H
+
 #include "BaseApi.hpp"
 #include "../Monitors/CaixaMonitor.hpp"
 
@@ -8,3 +11,5 @@ public:
     CaixaApi(WaterMonitor *caixa);
     void configuraRotas() override;
 };
+
+#endif

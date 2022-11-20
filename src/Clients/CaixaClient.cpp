@@ -1,13 +1,14 @@
 #include "CaixaClient.hpp"
 
-CaixaClient::CaixaClient(char *cisternaIP)
+CaixaClient::CaixaClient(std::string cisternaIP)
 {
-    baseUrl = strcat("http://", cisternaIP);
+    baseUrl = "http://" + cisternaIP;
 };
 
 void CaixaClient::controlaBomba(bool deveLigar)
 {
-    http.begin(strcat(baseUrl, (deveLigar ? "on" : "off")));
+    std::string url = baseUrl + pumpPath + (deveLigar ? "on" : "off");
+    http.begin(url.c_str());
     http.setTimeout(500);
     http.addHeader("Content-Type", "text/plain");
     http.POST("");

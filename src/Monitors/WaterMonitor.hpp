@@ -1,9 +1,7 @@
-enum EstadoDoNivelDeAgua
-{
-    Vazio,
-    Mediano,
-    Cheio
-};
+#ifndef WATERMONITOR_H
+#define WATERMONITOR_H
+
+#include "EstadoDoNivelDeAgua.hpp"
 
 class WaterMonitor
 {
@@ -31,3 +29,5 @@ public:
     void controlaTrava(bool travar);
     virtual void gerenciaReservatorio();
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef CISTERNAAPI_H
+#define CISTERNAAPI_H
+
 #include "BaseApi.hpp"
 #include "../Monitors/CisternaMonitor.hpp"
 
@@ -10,3 +13,5 @@ public:
     CisternaApi(WaterMonitor *cisterna);
     void configuraRotas() override;
 };
+
+#endif

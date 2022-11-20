@@ -1,8 +1,10 @@
-// #include "TipoRecipiente.hpp"
+#ifndef MONITORCONFIG_H
+#define MONITORCONFIG_H
+
+#include <string>
 
 class MonitorConfig
 {
-
 public:
     enum TipoReservatorio
     {
@@ -15,18 +17,20 @@ public:
         float alturaQuandoCheio,
         float alturaQuandoVazio,
         TipoReservatorio tipoReservatorio,
-        char *ipOutroReservatorio);
+        std::string ipOutroReservatorio);
 
     float getAlturaDoSendor();
     float getalturaQuandoCheio();
     float getalturaQuandoVazio();
     TipoReservatorio getTipoReservatorio();
-    char *getIpOutroReservatorio();
+    std::string getIpOutroReservatorio();
 
 private:
     float alturaDoSensor;
     float alturaQuandoCheio;
     float alturaQuandoVazio;
     TipoReservatorio tipoReservatorio;
-    char *ipOutroReservatorio;
+    std::string ipOutroReservatorio;
 };
+
+#endif

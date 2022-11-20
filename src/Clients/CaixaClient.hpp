@@ -1,21 +1,24 @@
+#ifndef CAIXACLIENT_H
+#define CAIXACLIENT_H
+
 #include <iostream>
 
 #include <Arduino.h>
 
 #include <HTTPClient.h>
 
-using namespace std;
-
 class CaixaClient
 {
     HTTPClient http;
 
-    const char *pumpPath = "/pump?mode=";
+    const std::string pumpPath = "/pump?mode=";
 
-    char *baseUrl;
+    std::string baseUrl;
 
 public:
-    CaixaClient(char *cisternaIP);
+    CaixaClient(std::string cisternaIP);
 
     void controlaBomba(bool deveLigar);
 };
+
+#endif

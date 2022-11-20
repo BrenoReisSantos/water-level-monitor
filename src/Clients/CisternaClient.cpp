@@ -19,16 +19,16 @@ bool CisternaClient::checaVidaDaCaixa()
     return response;
 };
 
-CisternaClient::CisternaClient(char *caixaIP)
+CisternaClient::CisternaClient(std::string caixaIP)
 {
-    baseUrl = strcat("http://", caixaIP);
+    baseUrl = "http://" + caixaIP;
 };
 
 EstadoDoNivelDeAgua CisternaClient::checaEstadoDaCaixa()
 {
-    String url(strcat(baseUrl, statePath));
+    std::string url = baseUrl + statePath;
 
-    http.begin(url);
+    http.begin(url.c_str());
     int httpResponseCode = http.GET();
     String response = "";
     if (httpResponseCode > 0)

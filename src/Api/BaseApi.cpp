@@ -1,6 +1,8 @@
 #include "BaseApi.hpp"
 #include <ESPAsyncWebServer.h>
 
+#include <string>
+
 BaseApi::BaseApi(WaterMonitor *monitor)
 {
     this->monitor = monitor;
@@ -10,8 +12,8 @@ void BaseApi::getNivel()
 {
     webServer.on("/level", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-        char* responseText;
-        sprintf("%d" , responseText, monitor->getNivel());
+        const char *responseText;
+        sprintf((char *)"%d" , responseText, monitor->getNivel());
         request->send(200, "text/plain", responseText); });
 };
 
@@ -20,7 +22,7 @@ void BaseApi::getEstado()
     webServer.on("/state", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
                     
-        char* responseText;
+        const char* responseText;
         switch (monitor->getEstado())
         {
         case Vazio:
@@ -53,24 +55,24 @@ void BaseApi::postTravaSistema()
         }
         bool trava = (modo == "on" ? true : modo == "off" ? false : monitor->getTrava());
         monitor->controlaTrava(trava);
-        const char *responseText = monitor->getTrava() ? "LIGADO" : "DESLIGADO";
-        request->send(200, "text/plain", responseText); });
+        std::string responseText = monitor->getTrava() ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText.c_str()); });
 };
 
 void BaseApi::getEstadoDaTrava()
 {
     webServer.on("/isLocked", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-        const char *responseText = monitor->getTrava() ? "LIGADO" : "DESLIGADO";
-        request->send(200, "text/plain", responseText); });
+        std::string responseText = monitor->getTrava() ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText.c_str()); });
 };
 
 void BaseApi::ping()
 {
     webServer.on("/ping", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-        char *responseText = "pong";
-        request->send(200, "text/plain", responseText); });
+        std::string responseText = "pong";
+        request->send(200, "text/plain", responseText.c_str()); });
 };
 
 void BaseApi::configuraRotas()

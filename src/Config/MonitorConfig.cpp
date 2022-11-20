@@ -5,7 +5,7 @@ MonitorConfig::MonitorConfig(
     float alturaQuandoCheio,
     float alturaQuandoVazio,
     TipoReservatorio tipoReservatorio,
-    char *ipOutroReservatorio)
+    std::string ipOutroReservatorio)
 {
     this->alturaDoSensor = alturaDoSensor;
     this->alturaQuandoCheio = alturaQuandoCheio;
@@ -34,7 +34,7 @@ MonitorConfig::TipoReservatorio MonitorConfig::getTipoReservatorio()
     return tipoReservatorio;
 };
 
-char *MonitorConfig::getIpOutroReservatorio()
+std::string MonitorConfig::getIpOutroReservatorio()
 {
     return ipOutroReservatorio;
 };

@@ -1,8 +1,13 @@
+#ifndef CISTERNACLIENT_H
+#define CISTERNACLIENT_H
+
 #include <iostream>
 
 #include <Arduino.h>
 
 #include <HTTPClient.h>
+
+#include "../Monitors/EstadoDoNivelDeAgua.hpp"
 
 using namespace std;
 
@@ -10,14 +15,16 @@ class CisternaClient
 {
     HTTPClient http;
 
-    const char *statePath = "/state";
-    const char *healthPath = "/ping";
+    const string statePath = "/state";
+    const string healthPath = "/ping";
 
-    char *baseUrl;
+    string baseUrl;
 
 public:
-    CisternaClient(char *caixaIP);
+    CisternaClient(string caixaIP);
 
     bool checaVidaDaCaixa();
     EstadoDoNivelDeAgua checaEstadoDaCaixa();
 };
+
+#endif

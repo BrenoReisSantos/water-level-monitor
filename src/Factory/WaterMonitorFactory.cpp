@@ -5,11 +5,17 @@
 
 WaterMonitor *WaterMonitorFactory::criaInstancia(MonitorConfig *monitorConfig)
 {
+    CaixaClient *caixaClient = NULL;
+    CaixaMonitor *caixaMonitor = NULL;
+
+    CisternaClient *cisternaClient = NULL;
+    CisternaMonitor *cisternaMonitor = NULL;
+
     switch (monitorConfig->getTipoReservatorio())
     {
     case MonitorConfig::Caixa:
-        CaixaClient *caixaClient = new CaixaClient(monitorConfig->getIpOutroReservatorio());
-        CaixaMonitor *caixaMonitor = new CaixaMonitor(
+        caixaClient = new CaixaClient(monitorConfig->getIpOutroReservatorio());
+        caixaMonitor = new CaixaMonitor(
             monitorConfig->getAlturaDoSendor(),
             monitorConfig->getalturaQuandoCheio(),
             monitorConfig->getalturaQuandoVazio(),
@@ -17,8 +23,8 @@ WaterMonitor *WaterMonitorFactory::criaInstancia(MonitorConfig *monitorConfig)
         return caixaMonitor;
         break;
     case MonitorConfig::Cisterna:
-        CisternaClient *cisternaClient = new CisternaClient(monitorConfig->getIpOutroReservatorio());
-        CisternaMonitor *cisternaMonitor = new CisternaMonitor(
+        cisternaClient = new CisternaClient(monitorConfig->getIpOutroReservatorio());
+        cisternaMonitor = new CisternaMonitor(
             monitorConfig->getAlturaDoSendor(),
             monitorConfig->getalturaQuandoCheio(),
             monitorConfig->getalturaQuandoVazio(),

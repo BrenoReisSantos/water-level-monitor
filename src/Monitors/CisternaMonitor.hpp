@@ -1,3 +1,6 @@
+#ifndef CISTERNAMONITOR_H
+#define CISTERNAMONITOR_H
+
 #include "WaterMonitor.hpp"
 #include "../Clients/CisternaClient.hpp"
 
@@ -13,3 +16,5 @@ public:
     void gerenciaReservatorio();
     bool getEstadoBomba();
 };
+
+#endif

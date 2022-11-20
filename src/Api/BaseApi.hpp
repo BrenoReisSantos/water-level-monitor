@@ -1,3 +1,6 @@
+#ifndef BASEAPI_H
+#define BASEAPI_H
+
 #include "../Monitors/WaterMonitor.hpp"
 #include <ESPAsyncWebServer.h>
 
@@ -18,3 +21,5 @@ protected:
 public:
     virtual void configuraRotas();
 };
+
+#endif

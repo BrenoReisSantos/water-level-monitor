@@ -38,8 +38,8 @@ void CisternaApi::controlaBomba()
         bool bombaDeveLigar = modo == "on" ? true : modo == "off" ? false
                                                                   : ((CisternaMonitor *)monitor)->getEstadoBomba();
         ((CisternaMonitor *)monitor)->controlaBomba(bombaDeveLigar);
-        const char *responseText = ((CisternaMonitor *)monitor)->getEstadoBomba() ? "LIGADO" : "DESLIGADO";
-        request->send(200, "text/plain", responseText); });
+        std::string responseText = ((CisternaMonitor *)monitor)->getEstadoBomba() ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText.c_str()); });
 };
 
 void CisternaApi::getEstadoBomba()
@@ -47,6 +47,6 @@ void CisternaApi::getEstadoBomba()
     webServer.on("/isPumping", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
         Serial.println("Acesso a rota: /isPumping");
-        const char *responseText = ((CisternaMonitor *)monitor)->getEstadoBomba() ? "LIGADO" : "DESLIGADO";
-        request->send(200, "text/plain", responseText); });
+        std::string responseText = ((CisternaMonitor *)monitor)->getEstadoBomba() ? "LIGADO" : "DESLIGADO";
+        request->send(200, "text/plain", responseText.c_str()); });
 };
