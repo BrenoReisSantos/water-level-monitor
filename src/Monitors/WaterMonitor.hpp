@@ -2,6 +2,7 @@
 #define WATERMONITOR_H
 
 #include "EstadoDoNivelDeAgua.hpp"
+#include <string>
 
 class WaterMonitor
 {
@@ -28,6 +29,7 @@ public:
     EstadoDoNivelDeAgua getEstado();
     void controlaTrava(bool travar);
     virtual void gerenciaReservatorio();
+    virtual std::string toString();
 };
 
 #endif

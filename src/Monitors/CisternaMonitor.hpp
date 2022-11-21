@@ -15,6 +15,7 @@ public:
     void controlaBomba(bool ligar);
     void gerenciaReservatorio();
     bool getEstadoBomba();
+    std::string toString() override;
 };
 
 #endif

@@ -39,3 +39,11 @@ bool CisternaMonitor::getEstadoBomba()
 {
     return bombaLigada;
 };
+
+std::string CisternaMonitor::toString()
+{
+    char texto[100];
+
+    sprintf(texto, "| BOMBA LIGADA: %s", bombaLigada ? "true" : "false");
+    return WaterMonitor::toString() + texto;
+};
