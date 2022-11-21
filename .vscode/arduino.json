@@ -1,6 +1,6 @@
 {
-    "port": "COM8",
-    "configuration": "FlashFreq=80,UploadSpeed=921600,DebugLevel=none",
+    "port": "COM5",
+    "configuration": "FlashFreq=80,UploadSpeed=115200,DebugLevel=none",
     "board": "esp32:esp32:esp32doit-devkit-v1",
     "sketch": "distance-monitor.ino",
     "output": "output/"

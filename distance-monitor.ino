@@ -11,31 +11,14 @@
 #include "src/Factory/ApiFactory.hpp"
 #include "src/Config/MonitorConfig.hpp"
 
-// #define CISTERNA 1
-// #define CAIXA 2
-
 const String CAIXA_IP = "192.168.68.106";
 const String CISTERNA_IP = "192.168.68.109";
 
 // const byte TIPO_DE_RECIPIENTE = CAIXA;
 
 // Configuração do WIFI
-const char *WIFI_SSID = "Saquarema";
+const char *WIFI_SSID = "BRENAN";
 const char *WIFI_PASSWORD = "25602874";
-
-// const IPAddress SUBNET = IPAddress(255, 255, 255, 0);
-// const IPAddress GATEWAY = IPAddress(192, 168, 0, 1);
-// const IPAddress DNS(181, 213, 132, 2);
-// const IPAddress DNS1(8, 8, 8, 8);
-// const IPAddress DNS2(8, 8, 4, 4);
-
-// AsyncWebServer webServer = AsyncWebServer(80);
-
-// const char *CAIXA_HOST_NAME = "CAIXA_ESP32";
-// const char *CISTERNA_HOST_NAME = "CISTERNA_ESP32";
-
-// const IPAddress CAIXA_STATIC_IP = IPAddress(192, 168, 1, 10);
-// const IPAddress CISTERNA_STATIC_IP = IPAddress(192, 168, 1, 11);
 
 // Servidor para pegar horário
 const char *TIME_SERVER = "pool.ntp.org";
@@ -47,55 +30,25 @@ struct tm timeinfo;
 // Configuração do Sensor Ultrassônico
 const byte TRIGGER_PIN = 13;
 const byte ECHO_PIN = 12;
-UltraSonicDistanceSensor distanceSensor(TRIGGER_PIN, ECHO_PIN);
-
-// Configuração da dos alertas de Vazio e Cheio
-// const float SENSOR_HEIGHT = 30.f;
-// const float SENSOR_HEIGHT = 133.f; // CISTERNA
-// const float SENSOR_HEIGHT = 92.f; // CAIXA
-
-// // const float ALTURA_QUANDO_CHEIO = 25.f;
-// // const float ALTURA_QUANDO_CHEIO = 124.f; // CISTERNA
-// const float ALTURA_QUANDO_CHEIO = 65.f; // CAIXA
-// // const float ALTURA_QUANDO_VAZIO = 5.f
-// // const float ALTURA_QUANDO_VAZIO = 20.f; // CISTERNA
-// const float ALTURA_QUANDO_VAZIO = 30.f; // CAIXA
-
-// const int PORCENTAGEM_QUANDO_CHEIO = (int)((ALTURA_QUANDO_CHEIO / SENSOR_HEIGHT) * 100);
-// const int PORCENTAGEM_QUANDO_VAZIO = (int)((ALTURA_QUANDO_VAZIO / SENSOR_HEIGHT) * 100);
-
-// Variáveis de Controle / Estados
-// #define VAZIO 0
-// #define MEDIANO 1
-// #define CHEIO 2
-
-// byte estadoDoNivelDeAgua = VAZIO; // 0 VAZIO, 1 MEDIANO, 2 CHEIO
-// bool trava = false;
-// bool ligarBomba = false;
-// bool enchendo = false;
-
-// Nível da Água
-// int porcentagemDoNivelDeAgua = 0;
-
-// Configuração dos pinos de Vazio e Cheio (Vai ser retirado ao final)
-// const int PINO_CHEIO = 2;
-// const int PINO_VAZIO = 4;
+// UltraSonicDistanceSensor distanceSensor(TRIGGER_PIN, ECHO_PIN);
 
 const int PINO_BOMBEAR = 5; // Pino que vai controlar o relé e ligar a bomba
 
 // Buffer para calcular o tempo estimado de esvaziar/encher
-const int TAMANHO_HISTORICO_DE_NIVEL = 15;
-int historicoNivelDeAgua[TAMANHO_HISTORICO_DE_NIVEL];
+// const int TAMANHO_HISTORICO_DE_NIVEL = 15;
+// int historicoNivelDeAgua[TAMANHO_HISTORICO_DE_NIVEL];
 
 WaterMonitor *monitor;
 BaseApi *api;
 
 void setup()
 {
+    Serial.begin(115200);
+
     configuraFusoUTC();
     conectaAoWifi();
 
-    MonitorConfig *config = new MonitorConfig(100.f, 100.f, 0.f, MonitorConfig::Caixa, "1.1.1.1");
+    MonitorConfig *config = new MonitorConfig(100.f, 80.f, 40.f, MonitorConfig::Caixa, "1.1.1.1");
 
     WaterMonitorFactory monitorFactory = WaterMonitorFactory();
     ApiFactory apiFactory = ApiFactory();
@@ -109,37 +62,44 @@ void setup()
 // ------------------------- LOOP PRINCIPAL -------------------------
 void loop()
 {
-    float distanceCm = distanceSensor.measureDistanceCm();
-    monitor->atualizaNivel(distanceCm);
+    float distanciaMedidaEmCentimetros = medeDistanciaComSensorUltrassonico();
+    Serial.printf("[Distância medida: %f]\n", distanciaMedidaEmCentimetros);
+
+    monitor->atualizaNivel(distanciaMedidaEmCentimetros);
 
     monitor->gerenciaReservatorio();
+
+    printaStatus();
     delay(1000);
 }
 // -------------------------------------------------------------------
 
-void registraNivel(int nivelDeAguaEmPorcentagem)
+float medeDistanciaComSensorUltrassonico()
+{
+    // Clears the trigPin condition
+    digitalWrite(TRIGGER_PIN, LOW);
+    delayMicroseconds(2);
+    // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
+    digitalWrite(TRIGGER_PIN, HIGH);
+    delayMicroseconds(20);
+    digitalWrite(TRIGGER_PIN, LOW);
+    // Reads the echoPin, returns the sound wave travel time in microseconds
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    // Calculating the distance
+    return duration * 0.034 / 2;
+}
+
+void printaStatus()
 {
 
     // if (filaCheia(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL))
     //     desenfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL);
     // enfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL, nivelDeAguaEmPorcentagem);
 
-    Serial.print(year());
-    Serial.print("-");
-    Serial.print(month());
-    Serial.print("-");
-    Serial.print(day());
-    Serial.print(" ");
-    Serial.print(hour());
-    Serial.print(":");
-    Serial.print(minute());
-    Serial.print(":");
-    Serial.print(second());
-    Serial.print(" ");
-    Serial.print(nivelDeAguaEmPorcentagem);
-    Serial.print("%");
-    String stateText;
-    // -----------------------------
+    Serial.printf("%d/%d/%d %d:%d:%d ", year(), month(), day(), hour(), minute(), second());
+
+    Serial.printf("%d\%", monitor->getNivel());
+
     Serial.println();
 }
 

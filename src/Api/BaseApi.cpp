@@ -12,8 +12,8 @@ void BaseApi::getNivel()
 {
     webServer.on("/level", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-        const char *responseText;
-        sprintf((char *)"%d" , responseText, monitor->getNivel());
+        char responseText[10];
+        sprintf(responseText, "%d", monitor->getNivel());
         request->send(200, "text/plain", responseText); });
 };
 
