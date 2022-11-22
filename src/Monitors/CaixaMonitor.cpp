@@ -23,3 +23,8 @@ void CaixaMonitor::gerenciaReservatorio()
     if (estado == Vazio)
         client->controlaBomba(true);
 };
+
+std::string CaixaMonitor::toString()
+{
+    return WaterMonitor::toString();
+};

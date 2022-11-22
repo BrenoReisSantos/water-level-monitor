@@ -47,7 +47,7 @@ void WaterMonitor::controlaTrava(bool travar)
 
 std::string WaterMonitor::toString()
 {
-    char texto[100];
+    char texto[200];
 
     const char *textoDoEstado;
     if (estado == Cheio)
@@ -57,7 +57,7 @@ std::string WaterMonitor::toString()
     else
         textoDoEstado = "Vazio";
 
-    sprintf(texto, "ALTURA SENSOR: %f | ALTURA CHEIO: %f | ALTURA VAZIO: %f | LOCK: %s | NÍVEL: %d\% | ESTADO: %s",
+    sprintf(texto, "ALTURA SENSOR: %.1f | ALTURA CHEIO: %.1f | ALTURA VAZIO: %.1f | LOCK: %s | NÍVEL: %d%% | ESTADO: %s",
             alturaDoSensor,
             alturaQuandoCheio,
             alturaQuandoVazio,

@@ -7,6 +7,8 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 
+#include <string>
+
 #include "src/Factory/WaterMonitorFactory.hpp"
 #include "src/Factory/ApiFactory.hpp"
 #include "src/Config/MonitorConfig.hpp"
@@ -30,13 +32,8 @@ struct tm timeinfo;
 // Configuração do Sensor Ultrassônico
 const byte TRIGGER_PIN = 13;
 const byte ECHO_PIN = 12;
-// UltraSonicDistanceSensor distanceSensor(TRIGGER_PIN, ECHO_PIN);
 
 const int PINO_BOMBEAR = 5; // Pino que vai controlar o relé e ligar a bomba
-
-// Buffer para calcular o tempo estimado de esvaziar/encher
-// const int TAMANHO_HISTORICO_DE_NIVEL = 15;
-// int historicoNivelDeAgua[TAMANHO_HISTORICO_DE_NIVEL];
 
 WaterMonitor *monitor;
 BaseApi *api;
@@ -48,14 +45,25 @@ void setup()
     configuraFusoUTC();
     conectaAoWifi();
 
-    MonitorConfig *config = new MonitorConfig(100.f, 80.f, 40.f, MonitorConfig::Caixa, "1.1.1.1");
+    float alturadoSensor = 100;
+    float alturaQuandoCheio = 80;
+    float alturaQuandoVazio = 40;
+    MonitorConfig::TipoReservatorio tipoReservatorio = MonitorConfig::Caixa;
+    std::string ipOutroReservatorio = "1.1.1.1";
+
+    MonitorConfig *config = new MonitorConfig(
+        alturadoSensor,
+        alturaQuandoCheio,
+        alturaQuandoVazio,
+        tipoReservatorio,
+        ipOutroReservatorio);
 
     WaterMonitorFactory monitorFactory = WaterMonitorFactory();
     ApiFactory apiFactory = ApiFactory();
 
     monitor = monitorFactory.criaInstancia(config);
 
-    api = apiFactory.criaInstancia(MonitorConfig::Caixa, monitor);
+    api = apiFactory.criaInstancia(config->getTipoReservatorio(), monitor);
     api->configuraRotas();
 }
 
@@ -86,19 +94,13 @@ float medeDistanciaComSensorUltrassonico()
     // Reads the echoPin, returns the sound wave travel time in microseconds
     long duration = pulseIn(ECHO_PIN, HIGH);
     // Calculating the distance
-    return duration * 0.034 / 2;
+    return (float)duration * 0.034f / (float)2;
 }
 
 void printaStatus()
 {
-
-    // if (filaCheia(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL))
-    //     desenfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL);
-    // enfileira(historicoNivelDeAgua, TAMANHO_HISTORICO_DE_NIVEL, nivelDeAguaEmPorcentagem);
-
-    Serial.printf("%d/%d/%d %d:%d:%d ", year(), month(), day(), hour(), minute(), second());
-
-    Serial.printf("%d\%", monitor->getNivel());
+    Serial.printf("%d/%d/%d %d:%d:%d\n", year(), month(), day(), hour(), minute(), second());
+    Serial.printf("%s\n", monitor->toString().c_str());
 
     Serial.println();
 }
@@ -144,81 +146,3 @@ void configuraFusoUTC()
     Serial.println("Disconnecting WiFi");
     WiFi.disconnect();
 }
-
-// Não está funcionando
-// void connectToWifiWithStaticIP()
-// {
-//     // Serial.println("Connecting to WiFi with static IP");
-//     switch (TIPO_DE_RECIPIENTE)
-//     {
-//     case CISTERNA:
-//         WiFi.setHostname(CISTERNA_HOST_NAME);
-//         // WiFi.config(CISTERNA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
-//         break;
-//     case CAIXA:
-//         WiFi.setHostname(CAIXA_HOST_NAME);
-//         // WiFi.config(CAIXA_STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
-//         break;
-//     }
-//     Serial.println(WiFi.macAddress());
-//     conectaAoWifi();
-// }
-
-// // --------------- Funções de Fila -------------------
-// void inicializaArrayDeHistoricoDeNiveis()
-// {
-//     for (int index = 0; index < TAMANHO_HISTORICO_DE_NIVEL; index++)
-//     {
-//         historicoNivelDeAgua[index] = -1.f;
-//     }
-// }
-
-// bool filaCheia(int *fila, int tamanhoDaFila)
-// {
-//     for (int index = 0; index < TAMANHO_HISTORICO_DE_NIVEL; index++)
-//     {
-//         if (historicoNivelDeAgua[index] == -1.f)
-//             return false;
-//     }
-//     return true;
-// }
-
-// void enfileira(int *fila, int tamanhoDaFila, float elemento)
-// {
-//     if (filaCheia(fila, tamanhoDaFila))
-//         return;
-//     for (int index = 0; index < tamanhoDaFila; index++)
-//     {
-//         if (fila[index] <= -1.f)
-//             fila[index] = elemento;
-//     }
-// }
-
-// float desenfileira(int *fila, int tamanhoDaFila)
-// {
-//     if (fila[0] == -1.f)
-//         return -1.f;
-//     float poppedElement = fila[0];
-//     moveElementosParaEsquerda(fila, tamanhoDaFila);
-//     return poppedElement;
-// }
-
-// void moveElementosParaEsquerda(int *vetor, int tamanhoDoVetor)
-// {
-//     for (int index = 0; index < tamanhoDoVetor; index++)
-//     {
-//         if (index == tamanhoDoVetor)
-//             vetor[index] = -1;
-//         vetor[index] = vetor[index + 1];
-//     }
-// }
-
-// void mostraArray(int *vetor, int tamanhoDoVetor)
-// {
-//     for (int index = 0; index < tamanhoDoVetor; index++)
-//     {
-//         Serial.printf("%d ", vetor[index]);
-//     }
-//     Serial.println();
-// }
-// // ----------------------------------------------------

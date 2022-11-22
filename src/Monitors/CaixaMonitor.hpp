@@ -11,6 +11,7 @@ class CaixaMonitor : public WaterMonitor
 public:
     CaixaMonitor(float alturaDoSensor, float alturaQuandoCheio, float alturaQuandoVazio, CaixaClient *client);
     void gerenciaReservatorio();
+    std::string toString() override;
 };
 
 #endif
