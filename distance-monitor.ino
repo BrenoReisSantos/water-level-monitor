@@ -16,8 +16,6 @@
 const String CAIXA_IP = "192.168.68.106";
 const String CISTERNA_IP = "192.168.68.109";
 
-// const byte TIPO_DE_RECIPIENTE = CAIXA;
-
 // Configuração do WIFI
 const char *WIFI_SSID = "BRENAN";
 const char *WIFI_PASSWORD = "25602874";
@@ -108,9 +106,7 @@ void printaStatus()
 // Conecta o ESP32 no WiFi
 void conectaAoWifi()
 {
-    Serial.print("Conectando a:");
-    Serial.print(WIFI_SSID);
-    Serial.println();
+    Serial.printf("Conectando a: %s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -118,23 +114,12 @@ void conectaAoWifi()
         Serial.print(".");
     }
     Serial.println();
-    Serial.print("SSID: ");
-    Serial.print(WiFi.SSID());
-    Serial.print(" IP: ");
-    Serial.print(WiFi.localIP());
-    Serial.print(" SUBNET: ");
-    Serial.print(WiFi.subnetMask());
-    Serial.print(" GATEWAY: ");
-    Serial.print(WiFi.gatewayIP());
-    Serial.print(" DNS: ");
-    Serial.print(WiFi.dnsIP());
-    Serial.println("\nWiFi conectado.");
+    Serial.printf("SSID: %s | IP: %s\n", WiFi.SSID(), WiFi.localIP().toString().c_str());
 }
 
 void configuraFusoUTC()
 {
     conectaAoWifi();
-    // Não funciona com ip estático...
     configTime(BRAZIL_TIME_ZONE, 0, TIME_SERVER);
     if (!getLocalTime(&timeinfo))
     {
