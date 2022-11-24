@@ -15,6 +15,8 @@ CaixaMonitor::CaixaMonitor(float alturaDoSensor, float alturaQuandoCheio, float 
     porcentagemQuandoCheio = (int)((alturaQuandoCheio / alturaDoSensor) * 100);
     porcentagemQuandoVazio = (int)((alturaQuandoVazio / alturaDoSensor) * 100);
 
+    levelQueue = new MonitorLevelQueue(30);
+
     trava = false;
 };
 

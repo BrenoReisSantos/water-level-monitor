@@ -2,6 +2,7 @@
 #define WATERMONITOR_H
 
 #include "EstadoDoNivelDeAgua.hpp"
+#include "../DataStructures/MonitorLevelQueue.hpp"
 #include <string>
 
 class WaterMonitor
@@ -15,6 +16,8 @@ protected:
     int porcentagemQuandoCheio;
 
     bool trava;
+
+    MonitorLevelQueue *levelQueue;
 
     int porcentagemDoNivelDeAgua;
 

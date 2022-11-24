@@ -1,3 +1,6 @@
+#ifndef CISTERNA_PIN_MANAGER_H
+#define CISTERNA_PIN_MANAGER_H
+
 #include "../Monitors/CisternaMonitor.hpp"
 
 class CisternaPinManager
@@ -10,3 +13,5 @@ public:
     void atualizaPinoDoRele();
     virtual ~CisternaPinManager(){};
 };
+
+#endif

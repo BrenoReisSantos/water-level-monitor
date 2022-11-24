@@ -3,9 +3,9 @@
 
 void WaterMonitor::atualizaEstado()
 {
-    if (porcentagemDoNivelDeAgua <= porcentagemQuandoVazio)
+    if (getNivel() <= porcentagemQuandoVazio)
         estado = Vazio;
-    else if (porcentagemDoNivelDeAgua >= porcentagemQuandoCheio)
+    else if (getNivel() >= porcentagemQuandoCheio)
         estado = Cheio;
     else
         estado = Mediano;
@@ -16,18 +16,18 @@ void WaterMonitor::atualizaNivel(float distanciaEmCm)
     int porcentagemDoNivelDeAguaAux = (int)((1 - (distanciaEmCm / alturaDoSensor)) * 100);
 
     if (porcentagemDoNivelDeAguaAux > 100)
-        porcentagemDoNivelDeAgua = 100;
+        levelQueue->queue(100);
     else if (porcentagemDoNivelDeAguaAux < 0)
-        porcentagemDoNivelDeAgua = 0;
+        levelQueue->queue(0);
     else
-        porcentagemDoNivelDeAgua = porcentagemDoNivelDeAguaAux;
+        levelQueue->queue(porcentagemDoNivelDeAguaAux);
 
     atualizaEstado();
 };
 
 int WaterMonitor::getNivel()
 {
-    return porcentagemDoNivelDeAgua;
+    return (int)levelQueue->average();
 };
 
 bool WaterMonitor::getTrava()
@@ -62,7 +62,7 @@ std::string WaterMonitor::toString()
             alturaQuandoCheio,
             alturaQuandoVazio,
             trava ? "true" : "false",
-            porcentagemDoNivelDeAgua,
+            getNivel(),
             textoDoEstado);
     return std::string(texto);
 };
