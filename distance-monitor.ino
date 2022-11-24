@@ -12,6 +12,8 @@
 #include "src/Factory/WaterMonitorFactory.hpp"
 #include "src/Factory/ApiFactory.hpp"
 #include "src/Config/MonitorConfig.hpp"
+#include "src/PinManager/UltrassonicSensor.hpp"
+#include "src/PinManager/CisternaPinManager.hpp"
 
 const String CAIXA_IP = "192.168.68.106";
 const String CISTERNA_IP = "192.168.68.109";
@@ -33,8 +35,14 @@ const byte ECHO_PIN = 12;
 
 const int PINO_BOMBEAR = 5; // Pino que vai controlar o relé e ligar a bomba
 
+MonitorConfig *config;
+
 WaterMonitor *monitor;
 BaseApi *api;
+
+UltrassonicSensor sensor = UltrassonicSensor(TRIGGER_PIN, ECHO_PIN);
+
+CisternaPinManager *cisternaPinManager;
 
 void setup()
 {
@@ -46,10 +54,10 @@ void setup()
     float alturadoSensor = 100;
     float alturaQuandoCheio = 80;
     float alturaQuandoVazio = 40;
-    MonitorConfig::TipoReservatorio tipoReservatorio = MonitorConfig::Caixa;
-    std::string ipOutroReservatorio = "1.1.1.1";
+    MonitorConfig::TipoReservatorio tipoReservatorio = MonitorConfig::Cisterna;
+    std::string ipOutroReservatorio = "192.168.0.59";
 
-    MonitorConfig *config = new MonitorConfig(
+    config = new MonitorConfig(
         alturadoSensor,
         alturaQuandoCheio,
         alturaQuandoVazio,
@@ -63,36 +71,30 @@ void setup()
 
     api = apiFactory.criaInstancia(config->getTipoReservatorio(), monitor);
     api->configuraRotas();
+
+    if (config->getTipoReservatorio() == MonitorConfig::Cisterna)
+    {
+        cisternaPinManager = new CisternaPinManager(PINO_BOMBEAR, (CisternaMonitor *)monitor);
+    }
 }
 
-// ------------------------- LOOP PRINCIPAL -------------------------
 void loop()
 {
-    float distanciaMedidaEmCentimetros = medeDistanciaComSensorUltrassonico();
+    float distanciaMedidaEmCentimetros = sensor.medeDistanciaEmCentimetros();
     Serial.printf("[Distância medida: %f]\n", distanciaMedidaEmCentimetros);
 
     monitor->atualizaNivel(distanciaMedidaEmCentimetros);
 
     monitor->gerenciaReservatorio();
 
-    printaStatus();
-    delay(1000);
-}
-// -------------------------------------------------------------------
+    if (config->getTipoReservatorio() == MonitorConfig::Cisterna)
+    {
+        cisternaPinManager->atualizaPinoDoRele();
+    }
 
-float medeDistanciaComSensorUltrassonico()
-{
-    // Clears the trigPin condition
-    digitalWrite(TRIGGER_PIN, LOW);
-    delayMicroseconds(2);
-    // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
-    digitalWrite(TRIGGER_PIN, HIGH);
-    delayMicroseconds(20);
-    digitalWrite(TRIGGER_PIN, LOW);
-    // Reads the echoPin, returns the sound wave travel time in microseconds
-    long duration = pulseIn(ECHO_PIN, HIGH);
-    // Calculating the distance
-    return (float)duration * 0.034f / (float)2;
+    printaStatus();
+
+    delay(1000);
 }
 
 void printaStatus()

@@ -3,20 +3,23 @@
 
 bool CisternaClient::checaVidaDaCaixa()
 {
+    std::string url = baseUrl + healthPath;
+    http.begin(url.c_str());
+    http.setConnectTimeout(500);
     int httpResponseCode = http.GET();
-    bool response = false;
+
     if (httpResponseCode > 0)
     {
         String responseText = http.getString();
         if (responseText == "pong" && httpResponseCode == 200)
-            response = true;
+            return true;
     }
     else
     {
-        response = false;
+        return false;
     }
     // Serial.println(response);
-    return response;
+    return false;
 };
 
 CisternaClient::CisternaClient(std::string caixaIP)
@@ -29,6 +32,7 @@ EstadoDoNivelDeAgua CisternaClient::checaEstadoDaCaixa()
     std::string url = baseUrl + statePath;
 
     http.begin(url.c_str());
+    http.setConnectTimeout(500);
     int httpResponseCode = http.GET();
     String response = "";
     if (httpResponseCode > 0)
