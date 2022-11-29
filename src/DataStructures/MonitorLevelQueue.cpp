@@ -28,7 +28,12 @@ void MonitorLevelQueue::queue(int item)
 int MonitorLevelQueue::dequeue()
 {
     if (queueArray.size() > 0)
+    {
+        int value = queueArray[0];
         queueArray.erase(queueArray.begin());
+        return value;
+    }
+    std::__throw_runtime_error("fila vazia.");
 };
 
 std::string MonitorLevelQueue::toString()

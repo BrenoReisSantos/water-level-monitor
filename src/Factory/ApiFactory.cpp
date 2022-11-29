@@ -16,4 +16,5 @@ BaseApi *ApiFactory::criaInstancia(MonitorConfig::TipoReservatorio tipo, WaterMo
         return new CisternaApi(monitor);
         break;
     };
+    std::__throw_runtime_error("Opção inexistente");
 };

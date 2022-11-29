@@ -32,4 +32,5 @@ WaterMonitor *WaterMonitorFactory::criaInstancia(MonitorConfig *monitorConfig)
         return cisternaMonitor;
         break;
     };
+    std::__throw_runtime_error("Tipo de Reservatório não encontrado.");
 };
