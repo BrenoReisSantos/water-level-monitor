@@ -10,7 +10,6 @@
 #include "Config/MonitorConfig.hpp"
 #include "PinManager/UltrassonicSensor.hpp"
 #include "PinManager/CisternaPinManager.hpp"
-#include "SDManager/SDManager.hpp"
 
 const String CAIXA_IP = "192.168.68.106";
 const String CISTERNA_IP = "192.168.68.109";
@@ -26,7 +25,7 @@ const char *TIME_SERVER = "pool.ntp.org";
 const int BRAZIL_TIME_ZONE = -3 * 3600;
 struct tm timeinfo;
 
-const int PINO_BOMBEAR = 5; // Pino que vai controlar o relé e ligar a bomba
+const int PINO_BOMBEAR = 25; // Pino que vai controlar o relé e ligar a bomba
 
 MonitorConfig *config;
 
@@ -85,6 +84,11 @@ void setup()
 {
   Serial.begin(115200);
 
+  while (!Serial)
+  {
+    yield();
+  }
+
   configuraFusoUTC();
   conectaAoWifi();
 
@@ -112,18 +116,6 @@ void setup()
   if (config->getTipoReservatorio() == MonitorConfig::Cisterna)
   {
     cisternaPinManager = new CisternaPinManager(PINO_BOMBEAR, (CisternaMonitor *)monitor);
-  }
-
-  // Teste do cartão SD
-  if (!SD.begin(5))
-  {
-    Serial.println("Não foi possível abrir o cartão SD");
-  }
-  else
-  {
-    fs::File file = SD.open("teste.txt", FILE_WRITE);
-    file.println("Qualquer coisa. Somente para testes mesmo.");
-    Serial.println("Escrevi coisa no cartão SD");
   }
 }
 
