@@ -5,10 +5,7 @@ Projeto feito como Trabalho de Conclusão de curso para a Graduação de Ciênci
 - Aluno: Breno Reis dos Santos
 - Orientador: Raphael Guerra
 
----
-
 ## Sumário
----
 
 - [Propósito](#propósito)
 - [Instalação](#instalação)
@@ -17,14 +14,11 @@ Projeto feito como Trabalho de Conclusão de curso para a Graduação de Ciênci
   - [Variáveis](#variáveis)
   - [Constantes](#contantes)
 
-
 ## Propósito
----
 
 O projeto tem como objetivo realizar o monitoramento do nível da água de 1 Cisterna e 4 Caixas d'água no mesmo nível. Esse monitoramento escreve registros em um arquivo que será usado para gerar relatórios mostrando o histórico de abastecimento de água na casa.
 
 ## Instalação
----
 ## VSCode
 
 ### Build
@@ -48,8 +42,7 @@ Já com o programa dentro do ESP32, é possível verificar os "prints" do progra
 
 - Clique no ícone de tomada na barra de tarefas inferior
 - Com o terminal aberto, o programa agora mostrará todos os Serial.print no terminal
-
-
+s
 <!-- - em seguida, já com o projeto clonado na sua máquina, abra o arquivo ```.vscode/c_cpp_properties.json``` e altere todas as referências de nome de usuário para o nome do usuário do seu computador (no momento esta como "breno". Então, basta mudar para o nome do seu usuário;
 - em seguida pegue tudo dentro da pasta "libraries" do projeto e cole na pasta ```Documentos/Arduino/libraries```
 - em seguida, aperte F1 para abrir a paleta de comando, digite "Arduino" e clique no comando "Board Manager" e instale o pacote "esp32 by Espressif Systems Version". Por fim, instale a 
