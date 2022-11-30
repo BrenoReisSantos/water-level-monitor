@@ -24,7 +24,6 @@ Projeto feito como Trabalho de Conclusão de curso para a Graduação de Ciênci
 O projeto tem como objetivo realizar o monitoramento do nível da água de 1 Cisterna e 4 Caixas d'água no mesmo nível. Esse monitoramento escreve registros em um arquivo que será usado para gerar relatórios mostrando o histórico de abastecimento de água na casa.
 
 ## Instalação
-
 ---
 ## VSCode
 
