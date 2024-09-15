@@ -40,9 +40,6 @@ UltrassonicSensor sensor = UltrassonicSensor(TRIGGER_PIN, ECHO_PIN);
 
 CisternaPinManager *cisternaPinManager;
 
-const int CS_PIN = 5;
-// SDManager sd = SDManager(CS_PIN);
-
 void printaStatus()
 {
   Serial.printf("%d/%d/%d %d:%d:%d\n", year(), month(), day(), hour(), minute(), second());
@@ -96,7 +93,7 @@ void setup()
   float alturaQuandoCheio = 80;
   float alturaQuandoVazio = 40;
   MonitorConfig::TipoReservatorio tipoReservatorio = MonitorConfig::Cisterna;
-  std::string ipOutroReservatorio = "192.168.0.59";
+  std::string ipOutroReservatorio = "192.168.68.111";
 
   config = new MonitorConfig(
       alturadoSensor,

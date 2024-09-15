@@ -29,6 +29,9 @@ void CisternaMonitor::controlaBomba(bool ligar)
 
 void CisternaMonitor::gerenciaReservatorio()
 {
+    if (!bombaLigada)
+        return;
+
     if (!client->checaVidaDaCaixa())
         bombaLigada = false;
 
